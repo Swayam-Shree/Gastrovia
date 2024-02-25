@@ -1,8 +1,10 @@
 import p5 from "p5";
 
 import { flappyPreLoad, flappySetup, flappyDraw, flappyKeyPressed, flappyMousePressed } from "./flappybird";
+import { loginSetup, loginDraw, loginKeyPressed, loginMousePressed } from "./login";
+import { globals } from "./globals";
 
-let state = "flappybird";
+let prevTime = Date.now();
 
 let mainScene = new p5((p) => {
 	p.preload = () => {
@@ -14,24 +16,34 @@ let mainScene = new p5((p) => {
 		p.rectMode(p.CENTER);
 		p.imageMode(p.CENTER);
 
+		loginSetup(p);
 		flappySetup(p);
 	};
 
 	p.draw = () => {
-		if (state === "flappybird") {
+		++globals.frameCount;
+		globals.dt = Date.now() - prevTime;
+		prevTime = Date.now();
+		if (globals.state === "login") {
+			loginDraw(p);
+		} else if (globals.state === "flappybird") {
 			flappyDraw(p);
 		}
 	};
 
 	p.keyPressed = () => {
-		if (state === "flappybird") {
+		if (globals.state === "login") {
+			loginKeyPressed(p);
+		} else if (globals.state === "flappybird") {
 			flappyKeyPressed(p);
 		}
 	}
 
 	p.mousePressed = () => {
 		if (p.mouseX > 0 && p.mouseX < p.width && p.mouseY > 0 && p.mouseY < p.height) {
-			if (state === "flappybird") {
+			if (globals.state === "login") {
+				loginMousePressed(p);
+			} else if (globals.state === "flappybird") {
 				flappyMousePressed(p);
 			}
 		}

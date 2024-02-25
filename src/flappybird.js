@@ -1,17 +1,28 @@
 import satelliteImagePath from "./assets/flappybird/satellite.png";
+import towerImagePath from "./assets/flappybird/tower.png";
+import rotatedTowerImagePath from "./assets/flappybird/rotatedTower.png"
+
+import { Button } from "./ui";
 
 let bird;
 let gravity = 0.5;
 let score = 0;
 let dead = false;
-let satelliteImage;
+let pipeWHitboxError = 20;
+
+let satelliteImage, towerImage, rotatedTowerImage; 
+
+let replayButton;
 
 export function flappyPreLoad(p) {
 	satelliteImage = p.loadImage(satelliteImagePath);
+	towerImage = p.loadImage(towerImagePath);
+	rotatedTowerImage = p.loadImage(rotatedTowerImagePath);
 }
 
 export function flappySetup(p) {
 	bird = new Bird(p);
+
 	for (let i = 0; i < 2; ++i) {
 		let x = p.width * 0.8 + i * Pipe.spread;
 		let h = p.random(p.height * 0.1, p.height * 0.6);
@@ -19,20 +30,29 @@ export function flappySetup(p) {
 		let nh = p.height - h - Pipe.gap;
 		Pipe.pipes.push(new Pipe(p, x, h + Pipe.gap + nh/2, nh));
 	}
+
+	replayButton = new Button(p, p.width * 0.5, p.height * 0.85, 100, 50, "Replay", 20, () => {
+		Pipe.pipes = [];
+		score = 0;
+		flappySetup(p);
+		dead = false;
+	});
 }
 
 export function flappyDraw(p) {
 	p.background(0);
 
 	if (dead) {
+		p.textAlign(p.CENTER, p.CENTER);
 		p.fill(255, 0, 0);
 		p.textSize(64);
-		p.text("Game Over!", p.width * 0.05, p.height * 0.2);
-		p.text("Score: " + score, p.width * 0.25, p.height * 0.5);
+		p.text("Game Over!", p.width * 0.5, p.height * 0.2);
+		p.text("Score: " + score, p.width * 0.5, p.height * 0.5);
 		p.fill(255);
 		p.textSize(32);
-		p.text("Press R or click", p.width * 0.1, p.height * 0.7);
-		p.text("anywhere to restart", p.width * 0.1, p.height * 0.75);
+		p.text("Press R", p.width * 0.5, p.height * 0.7);
+		p.text("or click", p.width * 0.5, p.height * 0.75);
+		replayButton.run(p.color(255), p.color(0), p.color(100));
 	} else {
 		bird.run(p);
 	
@@ -53,7 +73,7 @@ export function flappyDraw(p) {
 
 		p.fill(255);
 		p.textSize(32);
-		p.text("Score: " + score, p.width * 0.1, p.height * 0.1);
+		p.text("Score: " + score, p.width * 0.15, p.height * 0.1);
 	}
 
 }
@@ -75,10 +95,7 @@ export function flappyMousePressed(p) {
 	bird.jump(p);
 
 	if (dead) {
-		Pipe.pipes = [];
-		score = 0;
-		flappySetup(p);
-		dead = false;
+		replayButton.mousePressed();
 	}
 }
 
@@ -127,8 +144,8 @@ class Bird {
 				let top = this.position.y - this.shape.y/2;
 				let bottom = this.position.y + this.shape.y/2;
 
-				if (left > pipe.position.x - pipe.shape.x/2 && left < pipe.position.x + pipe.shape.x/2 ||
-					right > pipe.position.x - pipe.shape.x/2 && right < pipe.position.x + pipe.shape.x/2) {
+				if (left > pipe.position.x - pipe.shape.x/2 + pipeWHitboxError/2 && left < pipe.position.x + pipe.shape.x/2 - pipeWHitboxError/2 ||
+					right > pipe.position.x - pipe.shape.x/2 + pipeWHitboxError/2 && right < pipe.position.x + pipe.shape.x/2 - pipeWHitboxError/2) {
 					if (top > pipe.position.y - pipe.shape.y/2 && top < pipe.position.y + pipe.shape.y/2 ||
 						bottom > pipe.position.y - pipe.shape.y/2 && bottom < pipe.position.y + pipe.shape.y/2) {
 						dead = true;
@@ -156,9 +173,14 @@ class Pipe {
 	run(p) {
 		this.position.add(this.velocity);
 
-		p.fill(0, 255, 0);
-		p.stroke(255, 0, 0);
-		p.strokeWeight(2);
-		p.rect(this.position.x, this.position.y, this.shape.x, this.shape.y);
+		// p.fill(0, 255, 0);
+		// p.stroke(255, 0, 0);
+		// p.strokeWeight(2);
+		// p.rect(this.position.x, this.position.y, this.shape.x - pipeWHitboxError, this.shape.y);
+		if (this.position.y > p.height * 0.5) {
+			p.image(towerImage, this.position.x, this.position.y, this.shape.x, this.shape.y);
+		} else {
+			p.image(rotatedTowerImage, this.position.x, this.position.y, this.shape.x, this.shape.y);
+		}
 	}
 }
