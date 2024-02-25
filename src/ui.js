@@ -38,7 +38,7 @@ export class TextBox {
 		this.p = p;
 		this.maxLength = maxLength;
 
-		this.input = p.createInput("temp", hideText ? "password" : "text");
+		this.input = p.createInput("", hideText ? "password" : "text");
 		this.input.position(x - w/2, y - h/2);
 		this.input.size(w, h);
 		this.input.elt.placeholder = defaultText;
