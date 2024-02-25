@@ -2,17 +2,22 @@ import satelliteImagePath from "./assets/flappybird/satellite.png";
 import towerImagePath from "./assets/flappybird/tower.png";
 import rotatedTowerImagePath from "./assets/flappybird/rotatedTower.png"
 
-import { Button } from "./ui";
+import { Button, TextBox } from "./ui";
 
 let bird;
 let gravity = 0.5;
 let score = 0;
 let dead = false;
+let satelliteHitboxError = 15;
 let pipeWHitboxError = 20;
+
+let targetScore = 100;
+let stateCleared = false;
 
 let satelliteImage, towerImage, rotatedTowerImage; 
 
-let replayButton;
+let replayButton, continueButton;
+let answerBox;
 
 export function flappyPreLoad(p) {
 	satelliteImage = p.loadImage(satelliteImagePath);
@@ -23,7 +28,7 @@ export function flappyPreLoad(p) {
 export function flappySetup(p) {
 	bird = new Bird(p);
 
-	for (let i = 0; i < 2; ++i) {
+	for (let i = 0; i < 6; ++i) {
 		let x = p.width * 0.8 + i * Pipe.spread;
 		let h = p.random(p.height * 0.1, p.height * 0.6);
 		Pipe.pipes.push(new Pipe(p, x, h/2, h));
@@ -37,17 +42,40 @@ export function flappySetup(p) {
 		flappySetup(p);
 		dead = false;
 	});
+
+	answerBox = new TextBox(p, p.width * 0.5, p.height * 0.5, 200, 50, "Answer...", 20, 16);
+
+	continueButton = new Button(p, p.width * 0.5, p.height * 0.85, 100, 50, "Continue...", 20, () => {
+		console.log("Continue button pressed");
+	});
 }
 
 export function flappyDraw(p) {
 	p.background(0);
+	answerBox.hide();
 
-	if (dead) {
+	if (stateCleared) {
+		p.textAlign(p.CENTER, p.CENTER);
+		p.fill(0, 255, 0);
+		p.textSize(48);
+		p.text("Stage Cleared!", p.width * 0.5, p.height * 0.2);
+		p.fill(255);
+		p.textSize(16);
+		p.text("Answer the question to move to next round", p.width * 0.5, p.height * 0.3);
+		p.textSize(32);
+		p.text("how much is 2 + 2", p.width * 0.5, p.height * 0.4);
+		answerBox.run();
+		answerBox.show();
+		continueButton.run();
+	} else if (dead) {
 		p.textAlign(p.CENTER, p.CENTER);
 		p.fill(255, 0, 0);
 		p.textSize(64);
 		p.text("Game Over!", p.width * 0.5, p.height * 0.2);
-		p.text("Score: " + score, p.width * 0.5, p.height * 0.5);
+		p.text("Score: " + score, p.width * 0.5, p.height * 0.4);
+		p.fill(0, 255, 0);
+		p.textSize(16);
+		p.text("tap screen or press W/up arrow/space to stay afloat", p.width * 0.5, p.height * 0.5);
 		p.fill(255);
 		p.textSize(32);
 		p.text("Press R", p.width * 0.5, p.height * 0.7);
@@ -56,11 +84,11 @@ export function flappyDraw(p) {
 	} else {
 		bird.run(p);
 	
-		for (let i = Pipe.pipes.length - 1; i >= 0; --i) {
+		for (let i = Pipe.pipes.length - 2; i >= 0; i -= 2) {
 			let pipe = Pipe.pipes[i];
 			if (pipe.position.x + pipe.shape.x/2 < 0) {
-				Pipe.pipes.splice(i, 1);
-				score += 0.5;
+				Pipe.pipes.splice(i, 2);
+				++score;
 	
 				let x = Pipe.pipes[Pipe.pipes.length - 1].position.x + Pipe.spread;
 				let h = p.random(p.height * 0.1, p.height * 0.6);
@@ -69,13 +97,17 @@ export function flappyDraw(p) {
 				Pipe.pipes.push(new Pipe(p, x, h + Pipe.gap + nh/2, nh));
 			}
 			pipe.run(p);
+			Pipe.pipes[i + 1].run(p);
 		}
 
 		p.fill(255);
 		p.textSize(32);
 		p.text("Score: " + score, p.width * 0.15, p.height * 0.1);
-	}
 
+		if (score >= targetScore) {
+			stateCleared = true;
+		}
+	}
 }
 
 export function flappyKeyPressed(p) {
@@ -135,14 +167,15 @@ class Bird {
 
 		p.noStroke();
 		p.fill(255);
+		// p.rect(this.position.x, this.position.y, this.shape.x - satelliteHitboxError, this.shape.y - satelliteHitboxError);
 		p.image(satelliteImage, this.position.x, this.position.y, this.shape.x, this.shape.y)
 
 		for (let pipe of Pipe.pipes) {
 			if (pipe.position.x > this.position.x - this.shape.x/2 - pipe.shape.x/2) {
-				let left = this.position.x - this.shape.x/2;
-				let right = this.position.x + this.shape.x/2;
-				let top = this.position.y - this.shape.y/2;
-				let bottom = this.position.y + this.shape.y/2;
+				let left = this.position.x - this.shape.x/2 + satelliteHitboxError/2;
+				let right = this.position.x + this.shape.x/2 - satelliteHitboxError/2;
+				let top = this.position.y - this.shape.y/2 + satelliteHitboxError/2;
+				let bottom = this.position.y + this.shape.y/2 - satelliteHitboxError/2;
 
 				if (left > pipe.position.x - pipe.shape.x/2 + pipeWHitboxError/2 && left < pipe.position.x + pipe.shape.x/2 - pipeWHitboxError/2 ||
 					right > pipe.position.x - pipe.shape.x/2 + pipeWHitboxError/2 && right < pipe.position.x + pipe.shape.x/2 - pipeWHitboxError/2) {
@@ -158,10 +191,10 @@ class Bird {
 }
 
 class Pipe {
-	static gap = 250;
+	static gap = 230;
 	static width = 50;
 	static pipes = [];
-	static speed = 3;
+	static speed = 4;
 	static spread = 250;
 
 	constructor(p, x, y, h) {
