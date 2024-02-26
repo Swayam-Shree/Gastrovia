@@ -1,8 +1,8 @@
 import { globals } from './globals.js';
 
-export function pointInRect(point, position, shape) {
-	return point.x > position.x - shape.x/2 && point.x < position.x + shape.x/2 &&
-		point.y > position.y - shape.y/2 && point.y < position.y + shape.y/2;
+export function pointInRect(point, position, shape) { // rectMode(CENTER)
+	return point.x >= position.x - shape.x/2 && point.x <= position.x + shape.x/2 &&
+		point.y >= position.y - shape.y/2 && point.y <= position.y + shape.y/2;
 }
 
 export function nextState() {

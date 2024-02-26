@@ -16,7 +16,7 @@ let mainScene = new p5((p) => {
 		p.rectMode(p.CENTER);
 		p.imageMode(p.CENTER);
 
-		loginSetup(p);
+		// loginSetup(p);
 		flappySetup(p);
 	};
 

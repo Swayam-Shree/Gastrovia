@@ -12,6 +12,7 @@ export class Button {
 	} 
 
 	run(bgColor=this.p.color(255), textColor=this.p.color(0), hoverBgColor=this.p.color(100)) {
+		this.p.noStroke();
 		if (pointInRect(this.p.createVector(this.p.mouseX, this.p.mouseY), this.position, this.shape)) {
 			this.p.fill(hoverBgColor);
 		} else {

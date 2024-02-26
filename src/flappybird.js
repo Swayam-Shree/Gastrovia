@@ -3,6 +3,7 @@ import towerImagePath from "./assets/flappybird/tower.png";
 import rotatedTowerImagePath from "./assets/flappybird/rotatedTower.png"
 
 import { Button, TextBox } from "./ui";
+import { pointInRect } from "./util";
 
 let bird;
 let gravity = 0.5;
@@ -11,8 +12,16 @@ let dead = false;
 let satelliteHitboxError = 15;
 let pipeWHitboxError = 20;
 
-let targetScore = 100;
+let targetScore = 30;
 let stateCleared = false;
+
+let stars = [];
+let starCount = 10;
+let minStarRadius = 0.2;
+let maxStarRadius = 2;
+let minStarSpeed = 0.2;
+let maxStarSpeed = 8;
+let starDrift = 0.3;
 
 let satelliteImage, towerImage, rotatedTowerImage; 
 
@@ -36,6 +45,8 @@ export function flappySetup(p) {
 		Pipe.pipes.push(new Pipe(p, x, h + Pipe.gap + nh/2, nh));
 	}
 
+	answerBox = new TextBox(p, p.width * 0.5, p.height * 0.5, 200, 50, "Answer...", 20, 16);
+
 	replayButton = new Button(p, p.width * 0.5, p.height * 0.85, 100, 50, "Replay", 20, () => {
 		Pipe.pipes = [];
 		score = 0;
@@ -43,18 +54,35 @@ export function flappySetup(p) {
 		dead = false;
 	});
 
-	answerBox = new TextBox(p, p.width * 0.5, p.height * 0.5, 200, 50, "Answer...", 20, 16);
-
 	continueButton = new Button(p, p.width * 0.5, p.height * 0.85, 100, 50, "Continue...", 20, () => {
 		console.log("Continue button pressed");
 	});
+
+	for (let i = 0; i < starCount; ++i) {
+		let z = p.random(0, 100);
+		let vx = p.map(z, 0, 100, -maxStarSpeed, -minStarSpeed);
+		stars.push(new Particle(p, p.random(0, p.width), p.random(0, p.height), z, vx, starDrift));
+	}
 }
 
 export function flappyDraw(p) {
 	p.background(0);
 	answerBox.hide();
 
+	for (let i = stars.length - 1; i >= 0; --i) {
+		let star = stars[i];
+		if (star.withinScreen()) {
+			star.run();
+		} else {
+			let z = p.random(0, 100);
+			let vx = p.map(z, 0, 100, -maxStarSpeed, -minStarSpeed);
+			stars.push(new Particle(p, p.width, p.random(0, p.height), z, vx, starDrift));
+			stars.splice(i, 1);
+		}
+	}
+
 	if (stateCleared) {
+		p.noStroke();
 		p.textAlign(p.CENTER, p.CENTER);
 		p.fill(0, 255, 0);
 		p.textSize(48);
@@ -68,6 +96,7 @@ export function flappyDraw(p) {
 		answerBox.show();
 		continueButton.run();
 	} else if (dead) {
+		p.noStroke();
 		p.textAlign(p.CENTER, p.CENTER);
 		p.fill(255, 0, 0);
 		p.textSize(64);
@@ -128,6 +157,27 @@ export function flappyMousePressed(p) {
 
 	if (dead) {
 		replayButton.mousePressed();
+	}
+}
+
+class Particle {
+	constructor(p, x, y, z, vx, vy) {
+		this.p = p;
+		this.position = p.createVector(x, y, z);
+		this.velocity = p.createVector(vx, vy);
+		this.radius = p.map(z, 0, 100, maxStarRadius, minStarRadius);
+	}
+
+	run() {
+		this.position.add(this.velocity);
+
+		this.p.fill(255);
+		this.p.stroke(255);
+		this.p.circle(this.position.x, this.position.y, this.radius);
+	}
+
+	withinScreen() {
+		return pointInRect(this.position, this.p.createVector(this.p.width/2, this.p.height/2), this.p.createVector(this.p.width, this.p.height));
 	}
 }
 
