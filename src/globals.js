@@ -3,5 +3,5 @@ export let globals = {
 	dt: 0,
 	stateOrder: ["login", "flappybird"],
 	stateIndex: 0,
-	state: "flappybird"
+	state: "login"
 };

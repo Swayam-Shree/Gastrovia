@@ -15,8 +15,9 @@ let mainScene = new p5((p) => {
 		p.createCanvas(window.innerWidth, window.innerHeight);
 		p.rectMode(p.CENTER);
 		p.imageMode(p.CENTER);
+		p.angleMode(p.DEGREES);
 
-		// loginSetup(p);
+		loginSetup(p);
 		flappySetup(p);
 	};
 
