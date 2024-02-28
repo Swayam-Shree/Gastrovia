@@ -58,6 +58,7 @@ export function flappySetup(p) {
 		console.log("Continue button pressed");
 	});
 
+	stars = [];
 	for (let i = 0; i < starCount; ++i) {
 		let z = p.random(0, 100);
 		let vx = p.map(z, 0, 100, -maxStarSpeed, -minStarSpeed);
